@@ -1,0 +1,22 @@
+[
+  {
+    "username": "minenhle",
+    "email": "minenhle@example.com",
+    "passwordHash": "$2a$10$abc123hashedpassword",
+    "settings": {
+      "lowThreshold": 7.0,
+      "highThreshold": 14.0,
+      "units": "mmol/L"
+    }
+  },
+  {
+    "username": "john_doe",
+    "email": "john@example.com",
+    "passwordHash": "$2a$10$xyz456hashedpassword",
+    "settings": {
+      "lowThreshold": 8.0,
+      "highThreshold": 15.0,
+      "units": "mmol/L"
+    }
+  }
+]
