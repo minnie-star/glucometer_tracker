@@ -3,9 +3,100 @@
  * /api/users/register:
  *   post:
  *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User created successfully
+ */
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get a user by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User details
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /api/users/{id}/settings:
+ *   put:
+ *     summary: Update user settings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               settings:
+ *                 type: object
+ *                 properties:
+ *                   lowThreshold:
+ *                     type: number
+ *                   highThreshold:
+ *                     type: number
+ *                   units:
+ *                     type: string
+ *     responses:
+ *       200:
+ *         description: Settings updated
+ */
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   delete:
+ *     summary: Delete a user
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User deleted
+ *       404:
+ *         description: User not found
  */
 
 

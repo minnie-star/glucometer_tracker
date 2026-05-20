@@ -1,23 +1,16 @@
-const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerAutogen = require('swagger-autogen')();
 
-const options = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Glucometer Tracker API',
-      version: '1.0.0',
-      description: 'API documentation for the Glucometer Tracker project',
-    },
-    servers: [
-      {
-        url: 'http://localhost:3000',
-      },
-    ],
+const doc = {
+  info: {
+    title: 'Glucometer Tracker API',
+    description: 'API documentation for the Glucometer Tracker project',
   },
-  apis: ['./routes/*.js'], 
+  host: 'localhost:3000',
+  schemes: ['http'],
 };
 
-const specs = swaggerJsdoc(options);
+const outputFile = './swagger_output.json';
+const endpointsFiles = ['./routes/userRoutes.js', './routes/readingRoutes.js'];
 
-module.exports = { swaggerUi, specs };
+swaggerAutogen(outputFile, endpointsFiles, doc);
+

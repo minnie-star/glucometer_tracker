@@ -6,7 +6,11 @@ const connectDB = require('./database/database');
 
 const userRoutes = require('./routes/userRoutes');
 const readingRoutes = require('./routes/readingRoutes');
-const { swaggerUi, specs } = require('./swagger');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger_output.json');
+
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,7 +28,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/readings', readingRoutes);
 
 // Swagger API docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Root endpoint
 app.get('/', (req, res) => {
