@@ -16,6 +16,10 @@
  *                 type: string
  *               password:
  *                 type: string
+ *           example:
+ *             username: "minenhle"
+ *             email: "minenhle@example.com"
+ *             password: "secret123"
  *     responses:
  *       201:
  *         description: User created successfully
@@ -76,6 +80,11 @@
  *                     type: number
  *                   units:
  *                     type: string
+ *           example:
+ *             settings:
+ *               lowThreshold: 70
+ *               highThreshold: 140
+ *               units: "mg/dL"
  *     responses:
  *       200:
  *         description: Settings updated
@@ -98,6 +107,7 @@
  *       404:
  *         description: User not found
  */
+
 
 
 const express = require('express');
