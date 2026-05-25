@@ -5,9 +5,9 @@
     "description": "API documentation for the Glucometer Tracker project",
     "version": "1.0.0"
   },
-  "host": "localhost:3000",
+  "host": "https://glucometer-tracker.onrender.com",
   "basePath": "/",
-  "schemes": ["http"],
+  "schemes": ["https"],
   "paths": {
     "/api/users": {
       "get": {
