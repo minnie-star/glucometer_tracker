@@ -32,17 +32,20 @@ exports.addReading = async (req, res) => {
 exports.getReadings = async (req, res) => {
   try {
     const { userId } = req.params;
+
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: 'Invalid user ID format' });
     }
 
-    const readings = await Reading.find({ userId: mongoose.Types.ObjectId(userId) })
+    const readings = await Reading.find({ userId: new mongoose.Types.ObjectId(userId) })
                                   .sort({ timestamp: -1 });
+
     res.json(readings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching readings', error: error.message });
   }
 };
+
 
 
 // Get a single reading by ID
