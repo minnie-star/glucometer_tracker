@@ -8,8 +8,9 @@ const passport = require('passport');
 const session = require('express-session');
 const GitHubStrategy = require('passport-github').Strategy;
 
-const userRoutes = require('./routes/userRoutes');
-const readingRoutes = require('./routes/readingRoutes');
+const indexRoutes = require('./routes/index'); 
+// const authRoutes = require('./routes/authRoutes');
+const isAuthenticated = require('./middleware/authenticate');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger_output.json');
 
@@ -23,15 +24,21 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(passport.initialize());
-app.use(session()); 
+// app.use(session()); 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'supersecret', // must be set
+  resave: false,              // don’t save session if unmodified
+  saveUninitialized: false,   // don’t create session until something stored
+  cookie: { secure: false }   // set to true if you’re serving over HTTPS
+}));
+
 // Connect to MongoDB
 connectDB();
 
 // Routes
-app.use('/api/users', userRoutes);
-app.use('/api/readings', readingRoutes);
-
-app.use('/api/auth/github', require('./routes/authRoutes')); // GitHub OAuth routes
+app.use(indexRoutes);
+app.use('/api/readings', isAuthenticated, require('./routes/readingRoutes'));
+app.use('/api/auth/github', require('./routes/authRoutes'));
 
 // CORS headers
 app.use((req, res, next) => {
@@ -64,7 +71,12 @@ passport.deserializeUser((user, done) => {
     done(null, user);
 });
 
-app.get('/', (req, res) => { res.send(req.session.user !== undefined ? `Logged in as ${req.session.user.displayName}` : 'Not logged in') });
+app.get('/status', (req, res) => {
+  res.send(req.session.user
+    ? `Logged in as ${req.session.user.displayName}`
+    : 'Not logged in');
+});
+
 
 app.get('/github/callback', passport.authenticate('github', {
     failureRedirect: '/api-docs', session: false}),
@@ -72,6 +84,7 @@ app.get('/github/callback', passport.authenticate('github', {
         req.session.user =req.user;
         res.redirect('/');
     });
+
 
 // Swagger API docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

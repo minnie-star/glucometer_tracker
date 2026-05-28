@@ -3,6 +3,14 @@
  * /api/users/register:
  *   post:
  *     summary: Register a new user
+ *     ...
+ */
+
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Login a user
  *     requestBody:
  *       required: true
  *       content:
@@ -10,115 +18,27 @@
  *           schema:
  *             type: object
  *             properties:
- *               username:
- *                 type: string
  *               email:
  *                 type: string
  *               password:
  *                 type: string
  *           example:
- *             username: "minenhle"
  *             email: "minenhle@example.com"
  *             password: "secret123"
  *     responses:
- *       201:
- *         description: User created successfully
- */
-
-/**
- * @swagger
- * /api/users:
- *   get:
- *     summary: Get all users
- *     responses:
  *       200:
- *         description: List of users
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
  */
-
-/**
- * @swagger
- * /api/users/{id}:
- *   get:
- *     summary: Get a user by ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User details
- *       404:
- *         description: User not found
- */
-
-/**
- * @swagger
- * /api/users/{id}/settings:
- *   put:
- *     summary: Update user settings
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               settings:
- *                 type: object
- *                 properties:
- *                   lowThreshold:
- *                     type: number
- *                   highThreshold:
- *                     type: number
- *                   units:
- *                     type: string
- *           example:
- *             settings:
- *               lowThreshold: 70
- *               highThreshold: 140
- *               units: "mg/dL"
- *     responses:
- *       200:
- *         description: Settings updated
- */
-
-/**
- * @swagger
- * /api/users/{id}:
- *   delete:
- *     summary: Delete a user
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User deleted
- *       404:
- *         description: User not found
- */
-
-
 
 const express = require('express');
 const { body, param } = require('express-validator');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const isAuthenticated = require('../middleware/authenticate');
 
-// Get all users
-router.get('/', userController.getAllUsers);
-
-// Register new user
+// Public routes
 router.post(
   '/register',
   [
@@ -132,16 +52,22 @@ router.post(
   userController.registerUser
 );
 
-// Get user by ID
+router.post('/login', userController.loginUser);
+router.get('/logout', userController.logoutUser);
+
+// Protected routes
+router.get('/', isAuthenticated, userController.getAllUsers);
+
 router.get(
   '/:id',
+  isAuthenticated,
   [param('id').isMongoId().withMessage('Valid user ID is required')],
   userController.getUser
 );
 
-// Update user settings
 router.put(
   '/:id/settings',
+  isAuthenticated,
   [
     param('id').isMongoId().withMessage('Valid user ID is required'),
     body('settings.lowThreshold')
@@ -154,12 +80,13 @@ router.put(
   userController.updateUserSettings
 );
 
-// Delete user
 router.delete(
   '/:id',
+  isAuthenticated,
   [param('id').isMongoId().withMessage('Valid user ID is required')],
   userController.deleteUser
 );
 
 module.exports = router;
+
 
