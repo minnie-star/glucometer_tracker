@@ -26,15 +26,10 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // 🔹 Hash password before saving
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('passwordHash')) return next();
-    try {
-        const salt = await bcrypt.genSalt(10);
-        this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-        next();
-    } catch (err) {
-        next(err);
-    }
+userSchema.pre('save', async function () {
+    if (!this.isModified('passwordHash')) return;
+    const salt = await bcrypt.genSalt(10);
+    this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
 });
 
 // 🔹 Method to validate password
@@ -42,7 +37,7 @@ userSchema.methods.validatePassword = async function (password) {
     return bcrypt.compare(password, this.passwordHash);
 };
 
-module.exports = mongoose.model('User', userSchema);
+// module.exports = mongoose.model('User', userSchema);
 
-
-
+// Prevent OverwriteModelError by reusing existing model if already compiled
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
