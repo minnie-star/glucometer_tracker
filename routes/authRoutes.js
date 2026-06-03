@@ -4,7 +4,7 @@ const router = express.Router();
 
 // GitHub login route
 router.get('/',
-  passport.authenticate('github')
+  passport.authenticate('github', { scope: ['user:email'] })
 );
 
 // GitHub callback route

@@ -12,6 +12,10 @@ const indexRoutes = require('./routes/index');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,7 +26,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true, sameSite: 'lax' }
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
 app.use(passport.initialize());
 app.use(passport.session());

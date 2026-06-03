@@ -10,13 +10,24 @@ const userSchema = new mongoose.Schema({
     },
     email: {
         type: String,
-        required: true,
+        required: function() { return this.authType === 'local'; },
         unique: true,
-        lowercase: true
+        lowercase: true,
+        sparse: true
+    },
+    authType: {
+        type: String,
+        enum: ['local', 'github'],
+        default: 'local'
+    },
+    githubId: {
+        type: String,
+        unique: true,
+        sparse: true
     },
     passwordHash: {
         type: String,
-        required: true
+        required: function() { return this.authType === 'local'; }
     },
     resetPasswordToken: {
         type: String,

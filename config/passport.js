@@ -24,7 +24,7 @@ passport.use(new LocalStrategy(
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: process.env.GITHUB_CALLBACK_URL
+  callbackURL: process.env.GITHUB_CALLBACK_URL || `${process.env.BASE_URL || 'http://localhost:3000'}/api/auth/github/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     // Try to find an existing GitHub user
