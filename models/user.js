@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    resetPasswordToken: {
+        type: String,
+        default: null
+    },
+    resetPasswordExpires: {
+        type: Date,
+        default: null
+    },
     settings: {
         lowThreshold: { type: Number, default: 4.0 },   // mmol/L
         highThreshold: { type: Number, default: 7.8 }, // mmol/L

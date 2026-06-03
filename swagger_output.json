@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Glucometer Tracker API",
-    "description": "API documentation for the Glucometer Tracker project with session-based authentication and GitHub OAuth.",
+    "description": "API documentation for the Glucometer Tracker project using GitHub OAuth for authentication.",
     "version": "1.0.0"
   },
   "host": "localhost:3000",
@@ -40,7 +40,7 @@
     "/api/users/login": {
       "post": {
         "summary": "Login a user",
-        "description": "Authenticate using email and password and establish a session cookie.",
+        "description": "Authenticate using email and plain-text password and establish a session cookie. Do not send the bcrypt hash value stored in the database.",
         "parameters": [
           {
             "name": "body",
@@ -68,6 +68,56 @@
         "description": "Destroy the current session and log the user out.",
         "responses": {
           "200": { "description": "Logout successful" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/users/password-reset-request": {
+      "post": {
+        "summary": "Request a password reset",
+        "description": "Generates a password reset token for the user and (in this development build) returns the token in the response. In production this should be emailed.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": { "type": "string", "example": "user@example.com" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Token generated and returned (development)" },
+          "400": { "description": "Bad Request" },
+          "404": { "description": "User not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/api/users/password-reset": {
+      "post": {
+        "summary": "Reset password using token",
+        "description": "Resets the user's password when provided a valid token and new password.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": { "type": "string" },
+                "newPassword": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Password reset successful" },
+          "400": { "description": "Invalid token or bad request" },
           "500": { "description": "Internal Server Error" }
         }
       }
@@ -106,7 +156,7 @@
       "get": {
         "summary": "Get all users",
         "description": "Protected endpoint, requires an active session.",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "responses": {
           "200": { "description": "List of users" },
           "401": { "description": "Unauthorized" },
@@ -117,7 +167,7 @@
     "/api/users/{id}": {
       "get": {
         "summary": "Get a user by ID",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" }
         ],
@@ -130,7 +180,7 @@
       },
       "delete": {
         "summary": "Delete a user",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" }
         ],
@@ -145,7 +195,7 @@
     "/api/users/{id}/settings": {
       "put": {
         "summary": "Update user settings",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" },
           {
@@ -179,7 +229,7 @@
       "get": {
         "summary": "Get all readings",
         "description": "Protected endpoint requiring an authenticated session.",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "responses": {
           "200": { "description": "List of readings" },
           "401": { "description": "Unauthorized" },
@@ -188,7 +238,7 @@
       },
       "post": {
         "summary": "Create a new reading",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           {
             "name": "body",
@@ -222,7 +272,7 @@
     "/api/readings/user/{userId}": {
       "get": {
         "summary": "Get readings for a user",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "userId", "in": "path", "required": true, "type": "string" }
         ],
@@ -237,7 +287,7 @@
     "/api/readings/{id}": {
       "get": {
         "summary": "Get a reading by ID",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" }
         ],
@@ -250,7 +300,7 @@
       },
       "put": {
         "summary": "Update a reading",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" },
           {
@@ -282,7 +332,7 @@
       },
       "delete": {
         "summary": "Delete a reading",
-        "security": [ { "sessionAuth": [] } ],
+        "security": [ { "githubOAuth": [] } ],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "type": "string" }
         ],
@@ -296,11 +346,15 @@
     }
   },
   "securityDefinitions": {
-    "sessionAuth": {
-      "type": "apiKey",
-      "name": "connect.sid",
-      "in": "cookie",
-      "description": "Session cookie used for authenticated requests after login."
+    "githubOAuth": {
+      "type": "oauth2",
+      "flow": "accessCode",
+      "authorizationUrl": "https://github.com/login/oauth/authorize",
+      "tokenUrl": "https://github.com/login/oauth/access_token",
+      "scopes": {
+        "user:email": "Access user email and profile"
+      }
     }
   }
 }
+

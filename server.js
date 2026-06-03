@@ -22,7 +22,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'supersecret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, httpOnly: true }
+  cookie: { secure: false, httpOnly: true, sameSite: 'lax' }
 }));
 app.use(passport.initialize());
 app.use(passport.session());

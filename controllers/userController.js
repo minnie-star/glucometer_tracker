@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/user');
+const crypto = require('crypto');
 
 // Get all users (hide passwordHash)
 exports.getAllUsers = async (req, res) => {
@@ -39,9 +40,22 @@ exports.registerUser = async (req, res) => {
 
 // Login user
 exports.loginUser = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const normalizedEmail = email ? email.toLowerCase() : null;
+
+        const user = await User.findOne({
+            $or: [
+                { email: normalizedEmail },
+                { username: req.body.username }
+            ]
+        });
+
         if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
         const isValid = await user.validatePassword(password);
@@ -97,6 +111,52 @@ exports.deleteUser = async (req, res) => {
         res.json({ message: 'User deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error deleting user', error: error.message });
+    }
+};
+
+// Request password reset - generate token and (in prod) email it
+exports.requestPasswordReset = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ message: 'Email is required' });
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const token = crypto.randomBytes(20).toString('hex');
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        // NOTE: In production you should email the token. For development we return it in the response.
+        res.json({ message: 'Password reset token generated', token });
+    } catch (error) {
+        res.status(500).json({ message: 'Error generating reset token', error: error.message });
+    }
+};
+
+// Reset password using token
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        if (!token || !newPassword) return res.status(400).json({ message: 'Token and newPassword are required' });
+
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) return res.status(400).json({ message: 'Invalid or expired token' });
+
+        // Set the new password (pre-save hook will hash)
+        user.passwordHash = newPassword;
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error resetting password', error: error.message });
     }
 };
 

@@ -20,6 +20,8 @@
  *             properties:
  *               email:
  *                 type: string
+ *               username:
+ *                 type: string
  *               password:
  *                 type: string
  *           example:
@@ -52,8 +54,34 @@ router.post(
   userController.registerUser
 );
 
-router.post('/login', userController.loginUser);
+router.post(
+  '/login',
+  [
+    body().custom(value => {
+      if (!value.email && !value.username) {
+        throw new Error('Email or username is required');
+      }
+      return true;
+    }),
+    body('email').optional().isEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required')
+  ],
+  userController.loginUser
+);
 router.get('/logout', userController.logoutUser);
+
+// Password reset routes
+router.post(
+  '/password-reset-request',
+  [ body('email').isEmail().withMessage('Valid email is required') ],
+  userController.requestPasswordReset
+);
+
+router.post(
+  '/password-reset',
+  [ body('token').notEmpty().withMessage('Token is required'), body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters') ],
+  userController.resetPassword
+);
 
 // Protected routes
 router.get('/', isAuthenticated, userController.getAllUsers);
