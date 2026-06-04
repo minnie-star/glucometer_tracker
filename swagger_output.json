@@ -5,7 +5,7 @@
     "description": "API documentation for the Glucometer Tracker project using GitHub OAuth for authentication.",
     "version": "1.0.0"
   },
-  "host": "https://glucometer-tracker.onrender.com",
+  "host": "glucometer-tracker.onrender.com",
   "basePath": "/",
   "schemes": [
     "http"
