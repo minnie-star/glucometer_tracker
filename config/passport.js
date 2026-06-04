@@ -20,7 +20,7 @@ async function generateUniqueUsername(rawUsername) {
   return username;
 }
 
-const githubCallbackURL = process.env.GITHUB_CALLBACK_URL ||
+const githubCallbackURL = process.env.GITHUB_CALLBACK_URL || process.env.CALLBACK_URL ||
   `${process.env.BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://glucometer-tracker.onrender.com' : 'http://localhost:3000')}/api/auth/github/callback`;
 
 // Local strategy
@@ -47,6 +47,7 @@ passport.use(new GitHubStrategy({
   callbackURL: githubCallbackURL
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    console.log('GitHub client ID configured:', !!process.env.GITHUB_CLIENT_ID);
     console.log('GitHub callback URL:', githubCallbackURL);
     console.log('GitHub profile id:', profile.id, 'username:', profile.username);
 
