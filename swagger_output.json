@@ -8,7 +8,7 @@
   "host": "glucometer-tracker.onrender.com",
   "basePath": "/",
   "schemes": [
-    "http"
+    "https"
   ],
   "paths": {
     "/api/users/register": {
