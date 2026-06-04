@@ -3,6 +3,26 @@ const LocalStrategy = require('passport-local').Strategy;
 const GitHubStrategy = require('passport-github').Strategy;
 const User = require('../models/user');
 
+function formatUsername(rawUsername, suffix) {
+  const base = String(rawUsername || '').trim().replace(/\s+/g, '').toLowerCase();
+  return suffix ? `${base}-${suffix}` : base;
+}
+
+async function generateUniqueUsername(rawUsername) {
+  let username = formatUsername(rawUsername);
+  let suffix = 0;
+
+  while (await User.findOne({ username })) {
+    suffix += 1;
+    username = formatUsername(rawUsername, suffix);
+  }
+
+  return username;
+}
+
+const githubCallbackURL = process.env.GITHUB_CALLBACK_URL ||
+  `${process.env.BASE_URL || (process.env.NODE_ENV === 'production' ? 'https://glucometer-tracker.onrender.com' : 'http://localhost:3000')}/api/auth/github/callback`;
+
 // Local strategy
 passport.use(new LocalStrategy(
   async (username, password, done) => {
@@ -24,26 +44,41 @@ passport.use(new LocalStrategy(
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: process.env.GITHUB_CALLBACK_URL || `${process.env.BASE_URL || 'http://localhost:3000'}/api/auth/github/callback`
+  callbackURL: githubCallbackURL
 }, async (accessToken, refreshToken, profile, done) => {
   try {
+    console.log('GitHub callback URL:', githubCallbackURL);
+    console.log('GitHub profile id:', profile.id, 'username:', profile.username);
+
     // Try to find an existing GitHub user
     let user = await User.findOne({ githubId: profile.id });
 
     if (!user) {
+      const rawUsername = profile.username || profile.displayName || `github-${profile.id}`;
+      const username = await generateUniqueUsername(rawUsername);
+
       // Create a new user with authType 'github'
       user = new User({
         authType: 'github',
-        username: profile.username || profile.displayName,
-        email: profile.emails?.[0]?.value || null, // optional for GitHub
+        username,
+        email: profile.emails?.[0]?.value || null,
         githubId: profile.id
       });
 
-      await user.save();
+      try {
+        await user.save();
+      } catch (saveError) {
+        if (saveError.code === 11000) {
+          console.error('GitHub user save duplicate key error:', saveError);
+          return done(null, false, { message: 'GitHub account cannot be linked because the username or email is already in use.' });
+        }
+        throw saveError;
+      }
     }
 
     return done(null, user);
   } catch (err) {
+    console.error('GitHub strategy error:', err);
     return done(err);
   }
 }));

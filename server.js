@@ -66,6 +66,15 @@ app.get('/', (req, res) => {
     res.send('Glucometer Tracker API is running...');
 });
 
+// Error handler
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(err.status || 500).json({
+        message: 'Internal Server Error',
+        error: err.message || 'An unexpected error occurred.'
+    });
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
